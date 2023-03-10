@@ -1,0 +1,52 @@
+version: "3"
+services:
+  back: 
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    volumes:
+      - ./server/src:/var/www/html/src
+      - ./server/.htaccess:/var/www/html/.htaccess
+    ports:
+      - "8080:80" 
+    networks:
+      - pelda_net
+  pelda_host:
+    build:
+      context: ./db
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      MYSQL_DATABASE: "test_db" 
+      MYSQL_USER: "user" 
+      MYSQL_PASSWORD: "password" 
+      MYSQL_ROOT_PASSWORD: "password"
+    ports:
+      - "3309:3306" 
+    networks:
+      - pelda_net
+    expose:
+      - "3309"
+  phpmyadmin: 
+    image: phpmyadmin/phpmyadmin
+    links:
+      - pelda_host
+    environment:
+      PMA_ARBITRARY: 1
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+    restart: always
+    ports:
+      - 8181:80 
+    networks:
+      - pelda_net
+    volumes:
+      - /sessions
+# phpmyadmin login: (host: pelda_host, felhasznalonev: user, jelszo: password) 
+networks:
+  pelda_net:
+    driver: bridge
+
+    # docker stop $(docker ps -a -q)
+    # docker rm -f $(docker ps -a -q)
+    # docker-compose up --build
